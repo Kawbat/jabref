@@ -23,8 +23,10 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Skin;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
@@ -93,6 +95,7 @@ public class GlobalSearchBar extends HBox {
     private final Button openGlobalSearchButton;
     private final ToggleButton keepSearchString;
     // private final Button searchModeButton;
+    private final Button searchHistoryButton;
     private final Tooltip searchFieldTooltip = new Tooltip();
     private final Label currentResults = new Label("");
 
@@ -105,6 +108,7 @@ public class GlobalSearchBar extends HBox {
     private final DialogService dialogService;
 
     private final BooleanProperty globalSearchActive = new SimpleBooleanProperty(false);
+    private final BooleanProperty searchHistoryActive = new SimpleBooleanProperty(false);
     private GlobalSearchResultDialog globalSearchResultDialog;
 
     public GlobalSearchBar(JabRefFrame frame, StateManager stateManager, PreferencesService preferencesService, CountingUndoManager undoManager, DialogService dialogService) {
@@ -145,6 +149,7 @@ public class GlobalSearchBar extends HBox {
         fulltextButton = IconTheme.JabRefIcons.FULLTEXT.asToggleButton();
         openGlobalSearchButton = IconTheme.JabRefIcons.OPEN_GLOBAL_SEARCH.asButton();
         keepSearchString = IconTheme.JabRefIcons.KEEP_SEARCH_STRING.asToggleButton();
+        searchHistoryButton = IconTheme.JabRefIcons.ADD_ENTRY.asButton();
 
         initSearchModifierButtons();
 
@@ -153,6 +158,7 @@ public class GlobalSearchBar extends HBox {
                                                     .or(caseSensitiveButton.focusedProperty())
                                                     .or(fulltextButton.focusedProperty())
                                                     .or(keepSearchString.focusedProperty())
+                                                    .or(searchHistoryButton.focusedProperty())
                                                     .or(searchField.textProperty()
                                                                    .isNotEmpty());
 
@@ -180,7 +186,7 @@ public class GlobalSearchBar extends HBox {
         visualizer.setDecoration(new IconValidationDecorator(Pos.CENTER_LEFT));
         Platform.runLater(() -> visualizer.initVisualization(regexValidator.getValidationStatus(), searchField));
 
-        this.getChildren().addAll(searchField, openGlobalSearchButton, currentResults);
+        this.getChildren().addAll(searchField, openGlobalSearchButton, searchHistoryButton, currentResults);
         this.setSpacing(4.0);
         this.setAlignment(Pos.CENTER_LEFT);
 
@@ -245,6 +251,17 @@ public class GlobalSearchBar extends HBox {
             performSearch();
             dialogService.showCustomDialogAndWait(globalSearchResultDialog);
             globalSearchActive.setValue(false);
+        });
+
+        searchHistoryButton.disableProperty().bindBidirectional(searchHistoryActive);
+        searchHistoryButton.setTooltip(new Tooltip(Localization.lang("See and reuse your search history")));
+        initSearchModifierButton(searchHistoryButton);
+        searchHistoryButton.setOnAction(evt -> {
+            searchHistoryActive.setValue(true);
+            globalSearchResultDialog = new GlobalSearchResultDialog(undoManager);
+            performSearch();
+            dialogService.showCustomDialogAndWait(globalSearchResultDialog);
+            searchHistoryActive.setValue(false);
         });
     }
 
