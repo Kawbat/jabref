@@ -9,6 +9,7 @@ import java.util.regex.PatternSyntaxException;
 
 import javax.swing.undo.UndoManager;
 
+import com.airhacks.afterburner.injection.Injector;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -50,6 +51,8 @@ import org.jabref.gui.autocompleter.AutoCompleteFirstNameMode;
 import org.jabref.gui.autocompleter.AutoCompletionTextInputBinding;
 import org.jabref.gui.autocompleter.PersonNameStringConverter;
 import org.jabref.gui.autocompleter.SuggestionProvider;
+import org.jabref.gui.help.AboutAction;
+import org.jabref.gui.help.AboutDialogView;
 import org.jabref.gui.icon.IconTheme;
 import org.jabref.gui.keyboard.KeyBinding;
 import org.jabref.gui.keyboard.KeyBindingRepository;
@@ -110,6 +113,8 @@ public class GlobalSearchBar extends HBox {
     private final BooleanProperty globalSearchActive = new SimpleBooleanProperty(false);
     private final BooleanProperty searchHistoryActive = new SimpleBooleanProperty(false);
     private GlobalSearchResultDialog globalSearchResultDialog;
+    private HistoryDialogView historyDialogView;
+
 
     public GlobalSearchBar(JabRefFrame frame, StateManager stateManager, PreferencesService preferencesService, CountingUndoManager undoManager, DialogService dialogService) {
         super();
@@ -257,11 +262,9 @@ public class GlobalSearchBar extends HBox {
         searchHistoryButton.setTooltip(new Tooltip(Localization.lang("See and reuse your search history")));
         initSearchModifierButton(searchHistoryButton);
         searchHistoryButton.setOnAction(evt -> {
-            searchHistoryActive.setValue(true);
-            globalSearchResultDialog = new GlobalSearchResultDialog(undoManager);
-            performSearch();
-            dialogService.showCustomDialogAndWait(globalSearchResultDialog);
-            searchHistoryActive.setValue(false);
+            historyDialogView = new HistoryDialogView();
+            DialogService dialogService = Injector.instantiateModelOrService(DialogService.class);
+            dialogService.showCustomDialog(historyDialogView);
         });
     }
 
